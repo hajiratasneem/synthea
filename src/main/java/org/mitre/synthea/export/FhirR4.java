@@ -891,7 +891,8 @@ public class FhirR4 {
     InsuranceComponent insuranceComponent = new InsuranceComponent();
     insuranceComponent.setSequence(1);
     insuranceComponent.setFocal(true);
-    insuranceComponent.setCoverage(new Reference().setDisplay(claim.payer.getName()));
+    insuranceComponent.setCoverage(new Reference("urn:uuid:"+claim.payer.getResourceID()));
+//    insuranceComponent.setCoverage(new Reference().setDisplay(claim.payer.getName()));
     claimResource.addInsurance(insuranceComponent);
 
     // duration of encounter
@@ -951,7 +952,8 @@ public class FhirR4 {
     InsuranceComponent insuranceComponent = new InsuranceComponent();
     insuranceComponent.setSequence(1);
     insuranceComponent.setFocal(true);
-    insuranceComponent.setCoverage(new Reference().setDisplay(claim.payer.getName()));
+    insuranceComponent.setCoverage(new Reference("urn:uuid:"+claim.payer.getResourceID()));
+//    insuranceComponent.setCoverage(new Reference().setDisplay(claim.payer.getName()));
     claimResource.addInsurance(insuranceComponent);
 
     // duration of encounter
@@ -1162,14 +1164,17 @@ public class FhirR4 {
     coverage.setStatus(CoverageStatus.ACTIVE);
     coverage.setType(new CodeableConcept().setText(payer.getName()));
     coverage.setBeneficiary(new Reference(personEntry.getFullUrl()));
-    coverage.addPayor(new Reference().setDisplay(payer.getName()));
+    coverage.addPayor(new Reference("urn:uuid:"+payer.getResourceID()));
+//    coverage.addPayor(new Reference().setDisplay(payer.getName()));
     eob.addContained(coverage);
     ExplanationOfBenefit.InsuranceComponent insuranceComponent =
         new ExplanationOfBenefit.InsuranceComponent();
     insuranceComponent.setFocal(true);
-    insuranceComponent.setCoverage(new Reference("#coverage").setDisplay(payer.getName()));
+//    insuranceComponent.setCoverage(new Reference("#coverage").setDisplay(payer.getName()));
+    insuranceComponent.setCoverage(new Reference("urn:uuid:"+payer.getResourceID()));
     eob.addInsurance(insuranceComponent);
-    eob.setInsurer(new Reference().setDisplay(payer.getName()));
+    eob.setInsurer(new Reference("urn:uuid:"+payer.getResourceID()));
+//    eob.setInsurer(new Reference().setDisplay(payer.getName()));
 
     org.hl7.fhir.r4.model.Claim claim =
         (org.hl7.fhir.r4.model.Claim) claimEntry.getResource();
@@ -3115,7 +3120,7 @@ public class FhirR4 {
     if (Config.getAsBoolean("exporter.fhir.bulk_data")) {
       return resourceType + "/";
     } else {
-      return "urn:uuid:";
+    	return "urn:uuid:";
     }
   }
 }
