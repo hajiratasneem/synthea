@@ -64,7 +64,11 @@ public abstract class FhirPractitionerExporterR4 {
           }
         }
       }
-
+      for (BundleEntryComponent nextEntry : bundle.getEntry()) {
+        	if (nextEntry.hasFullUrl()) {
+        		nextEntry.setFullUrl(null);
+        	}
+        }
       String bundleJson = FhirR4.getContext().newJsonParser().setPrettyPrint(true)
           .encodeResourceToString(bundle);
 

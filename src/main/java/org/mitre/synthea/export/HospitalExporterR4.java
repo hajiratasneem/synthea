@@ -51,6 +51,11 @@ public abstract class HospitalExporterR4 {
           addHospitalExtensions(h, (Organization) entry.getResource());
         }
       }
+      for (BundleEntryComponent nextEntry : bundle.getEntry()) {
+      	if (nextEntry.hasFullUrl()) {
+      		nextEntry.setFullUrl(null);
+      	}
+      }
 
       String bundleJson = FhirR4.getContext().newJsonParser().setPrettyPrint(true)
           .encodeResourceToString(bundle);

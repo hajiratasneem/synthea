@@ -352,6 +352,11 @@ public class FhirR4 {
    */
   public static String convertToFHIRJson(Person person, long stopTime) {
     Bundle bundle = convertToFHIR(person, stopTime);
+    for (BundleEntryComponent nextEntry : bundle.getEntry()) {
+    	if (nextEntry.hasFullUrl()) {
+    		nextEntry.setFullUrl(null);
+    	}
+    }
     String bundleJson = FHIR_CTX.newJsonParser().setPrettyPrint(true)
         .encodeResourceToString(bundle);
 
