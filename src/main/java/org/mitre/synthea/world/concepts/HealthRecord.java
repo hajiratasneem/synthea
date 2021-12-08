@@ -169,11 +169,60 @@ public class HealthRecord implements Serializable {
     }
 
     /**
+     * Merges the passed in code list into the existing list of codes for this entry. If a code in
+     * otherCodes already exists in this.codes, it is skipped, since it already exists in the Entry.
+     * @param otherCodes codes to add to this entry
+     */
+    public void mergeCodeList(List<Code> otherCodes) {
+      otherCodes.forEach(oc -> {
+        if (! this.containsCode(oc.code, oc.system)) {
+          this.codes.add(oc);
+        }
+      });
+    }
+
+    /**
      * Converts the entry to a String.
      */
     @Override
     public String toString() {
       return String.format("%s %s", Instant.ofEpochMilli(start).toString(), type);
+    }
+  }
+
+  public abstract class EntryWithReasons extends Entry {
+    public List<Code> reasons;
+
+    /**
+     * Constructor for HealthRecord EntryWithReasons.
+     */
+    public EntryWithReasons(long time, String type) {
+      super(time, type);
+      this.reasons = new ArrayList<Code>();
+    }
+
+
+    /**
+     * Merges the passed in code list into the existing list of codes for this entry. If a code in
+     * otherCodes already exists in this.codes, it is skipped, since it already exists in the Entry.
+     * @param otherCodes codes to add to this entry
+     */
+    public void mergeReasonList(List<Code> otherCodes) {
+      otherCodes.forEach(oc -> {
+        if (! this.containsReason(oc.code, oc.system)) {
+          this.codes.add(oc);
+        }
+      });
+    }
+
+    /**
+     * Determines if the given entry contains the provided reason code in its list of reason codes.
+     * @param code clinical term
+     * @param system system for the code
+     * @return true if the code is there
+     */
+    public boolean containsReason(String code, String system) {
+      return this.reasons.stream().anyMatch(c -> code.equals(c.code) && system.equals(c.system));
     }
   }
 
@@ -206,8 +255,7 @@ public class HealthRecord implements Serializable {
     }
   }
 
-  public class Medication extends Entry {
-    public List<Code> reasons;
+  public class Medication extends EntryWithReasons {
     public Code stopReason;
     public transient JsonObject prescriptionDetails;
     public Claim claim;
@@ -219,11 +267,10 @@ public class HealthRecord implements Serializable {
      */
     public Medication(long time, String type) {
       super(time, type);
-      this.reasons = new ArrayList<Code>();
       // Create a medication claim.
       this.claim = new Claim(this, person);
     }
-    
+
     /**
      * Java Serialization support for the prescriptionDetails field.
      * @param oos stream to write to
@@ -236,7 +283,7 @@ public class HealthRecord implements Serializable {
         oos.writeObject(null);
       }
     }
-    
+
     /**
      * Java Serialization support for the prescriptionDetails field.
      * @param ois stream to read from
@@ -262,8 +309,7 @@ public class HealthRecord implements Serializable {
     }
   }
 
-  public class Procedure extends Entry {
-    public List<Code> reasons;
+  public class Procedure extends EntryWithReasons {
     public Provider provider;
     public Clinician clinician;
 
@@ -272,14 +318,12 @@ public class HealthRecord implements Serializable {
      */
     public Procedure(long time, String type) {
       super(time, type);
-      this.reasons = new ArrayList<Code>();
       this.stop = this.start + TimeUnit.MINUTES.toMillis(15);
     }
   }
 
-  public class CarePlan extends Entry {
+  public class CarePlan extends EntryWithReasons {
     public Set<Code> activities;
-    public List<Code> reasons;
     public transient Set<JsonObject> goals;
     public Code stopReason;
 
@@ -289,7 +333,6 @@ public class HealthRecord implements Serializable {
     public CarePlan(long time, String type) {
       super(time, type);
       this.activities = new LinkedHashSet<Code>();
-      this.reasons = new ArrayList<Code>();
       this.goals = new LinkedHashSet<JsonObject>();
     }
 
@@ -301,7 +344,7 @@ public class HealthRecord implements Serializable {
       }
       oos.writeObject(stringifiedGoals);
     }
-    
+
     private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
       ois.defaultReadObject();
       ArrayList<String> stringifiedGoals = (ArrayList<String>) ois.readObject();
@@ -636,7 +679,7 @@ public class HealthRecord implements Serializable {
       super(start, type);
     }
   }
-  
+
   private Person person;
   public Provider provider;
   public List<Encounter> encounters;
@@ -968,7 +1011,7 @@ public class HealthRecord implements Serializable {
       present.remove(type);
     }
   }
-  
+
   /**
    * Remove a device from the patient based on the state where it was assigned.
    * @param time The time the device is removed.
@@ -1238,7 +1281,7 @@ public class HealthRecord implements Serializable {
    * @param time the time of the study.
    * @param type the type of the study.
    * @param series the series associated with the study.
-   * @return 
+   * @return
    */
   public ImagingStudy imagingStudy(long time, String type,
       List<ImagingStudy.Series> series) {
